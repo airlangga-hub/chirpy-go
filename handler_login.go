@@ -36,10 +36,12 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, response{User{
-		user.ID,
-		user.CreatedAt,
-		user.UpdatedAt,
-		user.Email,
-	}})
+	respondWithJSON(w, http.StatusOK, response{
+		User{
+			user.ID,
+			user.CreatedAt,
+			user.UpdatedAt,
+			user.Email,
+		}
+	})
 }
