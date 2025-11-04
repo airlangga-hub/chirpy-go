@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 	"github.com/google/uuid"
-	"github.com/airlangga-hub/internal/database"
-	"github.com/airlangga-hub/internal/auth"
+	"github.com/airlangga-hub/chirpy-go/internal/database"
+	"github.com/airlangga-hub/chirpy-go/internal/auth"
 )
 
 type User struct {
@@ -14,7 +14,6 @@ type User struct {
 	CreatedAt 	time.Time 	`json:"created_at"`
 	UpdatedAt	time.Time	`json:"updated_at"`
 	Email		string		`json:"email"`
-	Password	string		`json:"password"`
 }
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
