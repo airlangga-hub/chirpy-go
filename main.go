@@ -1,7 +1,5 @@
 package main
 
-import _ "github.com/lib/pq"
-
 import (
 	"log"
 	"net/http"
@@ -10,11 +8,13 @@ import (
 	"os"
 	"github.com/joho/godotenv"
 	"github.com/airlangga-hub/chirpy-go/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
-	fileserverHits atomic.Int32
-	db *database.Queries
+	fileserverHits 	atomic.Int32
+	db 				*database.Queries
+	platform		string
 }
 
 func main() {
@@ -37,9 +37,15 @@ func main() {
 
 	dbQueries := database.New(dbConn)
 
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
+	}
+
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		db: dbQueries,
+		platform: platform,
 	}
 
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
@@ -49,6 +55,8 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
