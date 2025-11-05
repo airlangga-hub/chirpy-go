@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"strings"
+	"net/http"
 )
 
 const ISSUER = "chirpy-access"
@@ -27,13 +29,13 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return match, nil
 }
 
-func MakeJWT(userID uuid.UUID, tokenSecret string) (string, error) {
+func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	signingKey := []byte(tokenSecret)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer: ISSUER,
 		IssuedAt: jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
 		Subject: userID.String(),
 	})
 
@@ -70,4 +72,19 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	return userID, nil
+}
+
+
+func GetBearerToken(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("No auth header in request")
+	}
+
+	splitAuth := strings.Fields(authHeader)
+	if len(splitAuth) < 2 || splitAuth[0] != "Bearer" {
+		return "", errors.New("Malformed authorization header")
+	}
+
+	return splitAuth[1], nil
 }
