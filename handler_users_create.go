@@ -55,6 +55,6 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 			user.CreatedAt,
 			user.UpdatedAt,
 			user.Email,
-		}
+		},
 	})
 }
