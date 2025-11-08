@@ -6,9 +6,20 @@ import (
 	"github.com/google/uuid"
 	"database/sql"
 	"errors"
+	"github.com/airlangga-hub/chirpy-go/internal/auth"
 )
 
 func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get API Key", err)
+		return
+	}
+	if apiKey != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "Invalid API Key", nil)
+		return
+	}
+
 	type parameters struct {
 		Event string `json:"event"`
 		Data struct {
@@ -28,7 +39,7 @@ func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := cfg.db.UpdateUserChirpyRed(r.Context(), params.Data.UserID)
+	err = cfg.db.UpdateUserChirpyRed(r.Context(), params.Data.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			respondWithError(w, http.StatusNotFound, "User not found", err)
