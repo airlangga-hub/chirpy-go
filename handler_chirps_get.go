@@ -6,6 +6,17 @@ import (
 )
 
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
+	authorID := uuid.Nil
+	var err error
+	authorIDString := r.URL.Query().Get("author_id")
+	if authorIDString != "" {
+		authorID, err = uuid.Parse(authorIDString)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid author ID", err)
+			return
+		}
+	}
+
 	dbChirps, err := cfg.db.GetChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps", err)
@@ -13,13 +24,17 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 
 	var chirps []Chirp
 
-	for _, chirp := range dbChirps{
+	for _, dbChirp := range dbChirps{
+		if authorID != uuid.Nil && dbChirp.UserID != authorID {
+			continue
+		}
+
 		chirps = append(chirps, Chirp{
-			chirp.ID,
-			chirp.CreatedAt,
-			chirp.UpdatedAt,
-			chirp.Body,
-			chirp.UserID,
+			dbChirp.ID,
+			dbChirp.CreatedAt,
+			dbChirp.UpdatedAt,
+			dbChirp.Body,
+			dbChirp.UserID,
 		})
 	}
 
